@@ -23,14 +23,10 @@ add_subdirectory (external)
 # On Visual 2005 and above, this module can set the debug working directory
 cmake_policy(SET CMP0026 OLD)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/external/rpavlik-cmake-modules-fe2273")
-include(CreateLaunchers)
-include(MSVCMultipleProcessCompile) # /MP
 
 if(INCLUDE_DISTRIB)
 	add_subdirectory(distrib)
 endif(INCLUDE_DISTRIB)
-
-
 
 include_directories(
 	external/glfw-3.1.2/include/GLFW/
@@ -80,8 +76,8 @@ target_link_libraries(FinalProject
 set_target_properties(FinalProject PROPERTIES COMPILE_DEFINITIONS "USE_ASSIMP")
 # Xcode and Visual working directories
 set_target_properties(FinalProject PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Final_Project/")
-create_target_launcher(FinalProject WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Final_Project/")
-
+# Set the working directory for Visual Studio
+set_property(TARGET FinalProject PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Final_Project")
 
 add_custom_command(
    TARGET FinalProject POST_BUILD

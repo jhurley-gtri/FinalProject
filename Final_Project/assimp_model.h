@@ -17,17 +17,20 @@ public:
 class CMeshProperties
 {
 public:
+	glm::vec3 m_center;
 	string m_Name;
 	glm::vec3 m_scale;
 
-	glm::vec3 m_center;
 	glm::vec3 m_minExtents;
 	glm::vec3 m_maxExtents;
 
 	CMeshProperties();
 	void updateExtents(const glm::vec3& pt);
 	void updateExtents(const float& x, const float& y, const float& z);
-
+	glm::vec3 CenterTranslate()
+	{
+		return glm::vec3(-m_center.x, -m_center.y, -m_center.z);
+	}
 };
 
 class CAssimpModel

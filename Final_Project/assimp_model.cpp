@@ -27,7 +27,7 @@ CMeshProperties::CMeshProperties() :
     m_scale(glm::vec3(1.0, 1.0, 1.0)), 
     m_center(glm::vec3(0.0, 0.0, 0.0)), 
     m_minExtents(glm::vec3(DBL_MAX, DBL_MAX, DBL_MAX)), 
-    m_maxExtents(glm::vec3(DBL_MIN, DBL_MIN, DBL_MIN))
+    m_maxExtents(glm::vec3(-DBL_MAX, -DBL_MAX, -DBL_MAX))
 {}
 
 void CMeshProperties::updateExtents(const float& x, const float& y, const float& z)
@@ -40,9 +40,9 @@ void CMeshProperties::updateExtents(const float& x, const float& y, const float&
     if (y > m_maxExtents.y) m_maxExtents.y = y;
     if (z > m_maxExtents.z) m_maxExtents.z = z;
 
-    m_center.x = m_maxExtents.x - m_minExtents.x;
-    m_center.y = m_maxExtents.y - m_minExtents.y;
-    m_center.z = m_maxExtents.z - m_minExtents.z;
+    m_center.x = (m_maxExtents.x + m_minExtents.x) / 2.0;
+    m_center.y = (m_maxExtents.y + m_minExtents.y) / 2.0;
+    m_center.z = (m_maxExtents.z + m_minExtents.z) / 2.0;
 
 }
 
@@ -134,8 +134,7 @@ bool CAssimpModel::LoadModelFromFile(char* sFilePath)
         tTextures.reserve(50);
     }
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(sFilePath,
-        aiProcess_CalcTangentSpace |
+    const aiScene* scene = importer.ReadFile(sFilePath,       aiProcess_CalcTangentSpace |
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
         aiProcess_SortByPType);
@@ -151,6 +150,12 @@ bool CAssimpModel::LoadModelFromFile(char* sFilePath)
 
     // Determine the extents of the mesh
     m_meshProperties.resize(scene->mNumMeshes);
+    aiNode* pNode = scene->mRootNode;
+    int index = 0;
+    FOR(i, pNode->mNumChildren)
+    {
+        m_meshProperties[index++].m_Name = pNode->mChildren[i]->mName.C_Str();
+    }
     FOR(i, scene->mNumMeshes)
     {
         aiMesh* mesh = scene->mMeshes[i];
@@ -304,14 +309,6 @@ void CAssimpModel::RenderModel()
     glm::mat4 ViewMatrix = getViewMatrix();
     glm::mat4 ModelMatrix = glm::mat4(1.0);
 
-    ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0, 0.0, -10.0));
-    ModelMatrix = glm::rotate(ModelMatrix, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
-    glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-    // Send our transformation to the currently bound shader, 
-    // in the "MVP" uniform
-    glUniformMatrix4fv(m_MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    glUniformMatrix4fv(m_ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
     glUniformMatrix4fv(m_ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
     glm::vec3 lightPos = glm::vec3(20, 0, 20);
@@ -319,6 +316,18 @@ void CAssimpModel::RenderModel()
 
     FOR(i, iNumMeshes)
     {
+        // Setup the transformation matrices
+        // First just move all the pices to the origin
+        ModelMatrix = glm::mat4(1.0);
+        ModelMatrix = glm::translate(ModelMatrix, m_meshProperties[i].CenterTranslate());
+//        ModelMatrix = glm::rotate(ModelMatrix, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+        glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+        // Send our transformation to the currently bound shader, 
+        // in the "MVP" uniform
+        glUniformMatrix4fv(m_MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        glUniformMatrix4fv(m_ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+
         int iMatIndex = iMaterialIndices[i];
         if (tTextures.size() > iMatIndex)
             tTextures[iMatIndex].BindTexture();

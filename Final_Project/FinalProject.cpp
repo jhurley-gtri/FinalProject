@@ -79,7 +79,7 @@ int main( void )
 	CAssimpModel model;
 	model.InitialEnvironment();
 //	if (!model.LoadModelFromFile("./obj_static/display_static.obj")) 
-	if (!model.LoadModelFromFile("OBJ.obj")) 
+	if (!model.LoadModelFromFile("Chess/chess2.obj")) 
 	{
 		fprintf(stderr, "Failed to load OBJ file!!.\n");
 		getchar();
@@ -108,8 +108,6 @@ int main( void )
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Bind our texture in Texture Unit 0
-//		glActiveTexture(GL_TEXTURE0);
 		CAssimpModel::BindModelsVAO();
 		model.RenderModel();
 
