@@ -77,7 +77,7 @@ int main( void )
 	glEnable(GL_CULL_FACE);
 
 	CAssimpModel model;
-
+	model.InitialEnvironment();
 //	if (!model.LoadModelFromFile("./obj_static/display_static.obj")) 
 	if (!model.LoadModelFromFile("OBJ.obj")) 
 	{
@@ -88,58 +88,6 @@ int main( void )
 	}
 	CAssimpModel::FinalizeVBO();
 	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders( "StandardShading.vertexshader", "StandardShading.fragmentshader" );
-
-	// Get a handle for our "MVP" uniform
-	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
-	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
-	
-	// Get a handle for our buffers
-	GLuint vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
-	GLuint vertexUVID = glGetAttribLocation(programID, "vertexUV");
-	GLuint vertexNormal_modelspaceID = glGetAttribLocation(programID, "vertexNormal_modelspace");
-
-	//// Load the texture
-	//GLuint Texture = loadDDS("uvmap.DDS");
-	//
-	//// Get a handle for our "myTextureSampler" uniform
-	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
-
-	//// Read our .obj file
-	//std::vector<unsigned short> indices;
-	//std::vector<glm::vec3> indexed_vertices;
-	//std::vector<glm::vec2> indexed_uvs;
-	//std::vector<glm::vec3> indexed_normals;
-	//bool res = loadAssImp("suzanne.obj", indices, indexed_vertices, indexed_uvs, indexed_normals);
-
-	//// Load it into a VBO
-
-	//GLuint vertexbuffer;
-	//glGenBuffers(1, &vertexbuffer);
-	//glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	//glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_STATIC_DRAW);
-
-	//GLuint uvbuffer;
-	//glGenBuffers(1, &uvbuffer);
-	//glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	//glBufferData(GL_ARRAY_BUFFER, indexed_uvs.size() * sizeof(glm::vec2), &indexed_uvs[0], GL_STATIC_DRAW);
-
-	//GLuint normalbuffer;
-	//glGenBuffers(1, &normalbuffer);
-	//glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-	//glBufferData(GL_ARRAY_BUFFER, indexed_normals.size() * sizeof(glm::vec3), &indexed_normals[0], GL_STATIC_DRAW);
-
-	//// Generate a buffer for the indices as well
-	//GLuint elementbuffer;
-	//glGenBuffers(1, &elementbuffer);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0] , GL_STATIC_DRAW);
-
-	// Get a handle for our "LightPosition" uniform
-	glUseProgram(programID);
-	GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
-
 	// For speed computation
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
@@ -159,31 +107,6 @@ int main( void )
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-		// Use our shader
-		glUseProgram(programID);
-
-		// Compute the MVP matrix from keyboard and mouse input
-		computeMatricesFromInputs();
-		glm::mat4 ProjectionMatrix = getProjectionMatrix();
-		glm::mat4 ViewMatrix = getViewMatrix();
-		glm::mat4 ModelMatrix = glm::mat4(1.0);
-
-		ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0, 0.0, -10.0));
-		ModelMatrix = glm::rotate(ModelMatrix, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
-//		ModelMatrix = glm::rotate(ModelMatrix, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-//		ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0, -20.0, 0.0));
-		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
-		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
-
-		glm::vec3 lightPos = glm::vec3(20,0,20);
-		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
 		// Bind our texture in Texture Unit 0
 //		glActiveTexture(GL_TEXTURE0);

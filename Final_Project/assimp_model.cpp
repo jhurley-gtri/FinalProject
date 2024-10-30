@@ -7,6 +7,7 @@
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
+#include <common/controls.hpp>
 
 CVertexBufferObject CAssimpModel::vboModelData;
 UINT CAssimpModel::uiVAO;
@@ -88,6 +89,33 @@ CAssimpModel::CAssimpModel()
     bLoaded = false;
 }
 
+
+bool CAssimpModel::InitialEnvironment() 
+{
+
+    m_ProgramID = LoadShaders("StandardShading.vertexshader", "StandardShading.fragmentshader");
+
+    // Get a handle for our "MVP" uniform
+    m_MatrixID = glGetUniformLocation(m_ProgramID, "MVP");
+    m_ViewMatrixID = glGetUniformLocation(m_ProgramID, "V");
+    m_ModelMatrixID = glGetUniformLocation(m_ProgramID, "M");
+
+    // Get a handle for our buffers
+    m_VertexPosition_modelspaceID = glGetAttribLocation(m_ProgramID, "vertexPosition_modelspace");
+    m_VertexUVID = glGetAttribLocation(m_ProgramID, "vertexUV");
+    m_VertexNormal_modelspaceID = glGetAttribLocation(m_ProgramID, "vertexNormal_modelspace");
+
+    //// Load the texture
+    //GLuint Texture = loadDDS("uvmap.DDS");
+    //
+    //// Get a handle for our "myTextureSampler" uniform
+    m_TextureID = glGetUniformLocation(m_ProgramID, "myTextureSampler");
+
+    // Get a handle for our "LightPosition" uniform
+    m_LightID = glGetUniformLocation(m_ProgramID, "LightPosition_worldspace");
+
+    return true;
+}
 /*-----------------------------------------------
 
 Name:	LoadModelFromFile
@@ -267,6 +295,28 @@ void CAssimpModel::RenderModel()
     if (!bLoaded)
         return;
     int iNumMeshes = ESZ(iMeshSizes);
+    glUseProgram(m_ProgramID);
+
+
+    // Compute the MVP matrix from keyboard and mouse input
+    computeMatricesFromInputs();
+    glm::mat4 ProjectionMatrix = getProjectionMatrix();
+    glm::mat4 ViewMatrix = getViewMatrix();
+    glm::mat4 ModelMatrix = glm::mat4(1.0);
+
+    ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0, 0.0, -10.0));
+    ModelMatrix = glm::rotate(ModelMatrix, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+    glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+    // Send our transformation to the currently bound shader, 
+    // in the "MVP" uniform
+    glUniformMatrix4fv(m_MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    glUniformMatrix4fv(m_ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+    glUniformMatrix4fv(m_ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
+
+    glm::vec3 lightPos = glm::vec3(20, 0, 20);
+    glUniform3f(m_LightID, lightPos.x, lightPos.y, lightPos.z);
+
     FOR(i, iNumMeshes)
     {
         int iMatIndex = iMaterialIndices[i];

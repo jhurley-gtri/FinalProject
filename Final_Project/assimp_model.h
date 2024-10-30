@@ -33,6 +33,7 @@ public:
 class CAssimpModel
 {
 public:
+	bool InitialEnvironment();
 	bool LoadModelFromFile(char* sFilePath);
 
 	static void FinalizeVBO();
@@ -50,4 +51,23 @@ private:
 	vector<int> iMaterialIndices;
 	int iNumMaterials;
 	vector<CMeshProperties> m_meshProperties;
+
+	GLuint m_ProgramID;
+
+	// Get a handle for our "MVP" uniform
+	GLuint m_MatrixID;
+	GLuint m_ViewMatrixID;
+	GLuint m_ModelMatrixID;
+
+	// Get a handle for our buffers
+	GLuint m_VertexPosition_modelspaceID;
+	GLuint m_VertexUVID;
+	GLuint m_VertexNormal_modelspaceID;
+
+	//// Get a handle for our "myTextureSampler" uniform
+	GLuint m_TextureID;
+
+	// Get a handle for our "LightPosition" uniform
+	GLuint m_LightID;
+
 };
