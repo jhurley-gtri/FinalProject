@@ -160,7 +160,9 @@ typedef uint64_t UINT64;
 #else
 // MS is not C99 ISO compliant
 typedef long BOOL;
+#ifndef BYTE
 typedef unsigned char BYTE;
+#endif
 typedef unsigned short WORD;
 typedef unsigned long DWORD;
 typedef long LONG;

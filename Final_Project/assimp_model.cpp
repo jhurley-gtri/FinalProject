@@ -12,6 +12,55 @@ CVertexBufferObject CAssimpModel::vboModelData;
 UINT CAssimpModel::uiVAO;
 vector<CTexture> CAssimpModel::tTextures;
 
+
+/*-----------------------------------------------
+
+Name:	
+
+Params:	
+Result: 
+/*---------------------------------------------*/
+
+CMeshProperties::CMeshProperties() : 
+    m_Name(""), 
+    m_scale(glm::vec3(1.0, 1.0, 1.0)), 
+    m_center(glm::vec3(0.0, 0.0, 0.0)), 
+    m_minExtents(glm::vec3(DBL_MAX, DBL_MAX, DBL_MAX)), 
+    m_maxExtents(glm::vec3(DBL_MIN, DBL_MIN, DBL_MIN))
+{}
+
+void CMeshProperties::updateExtents(const float& x, const float& y, const float& z)
+{
+    if (x < m_minExtents.x) m_minExtents.x = x;
+    if (y < m_minExtents.y) m_minExtents.y = y;
+    if (z < m_minExtents.z) m_minExtents.z = z;
+
+    if (x > m_maxExtents.x) m_maxExtents.x = x;
+    if (y > m_maxExtents.y) m_maxExtents.y = y;
+    if (z > m_maxExtents.z) m_maxExtents.z = z;
+
+    m_center.x = m_maxExtents.x - m_minExtents.x;
+    m_center.y = m_maxExtents.y - m_minExtents.y;
+    m_center.z = m_maxExtents.z - m_minExtents.z;
+
+}
+
+void CMeshProperties::updateExtents(const glm::vec3& pt)
+{
+    if (pt.x < m_minExtents.x) m_minExtents.x = pt.x;
+    if (pt.y < m_minExtents.y) m_minExtents.y = pt.y;
+    if (pt.z < m_minExtents.z) m_minExtents.z = pt.z;
+
+    if (pt.x > m_maxExtents.x) m_maxExtents.x = pt.x;
+    if (pt.y > m_maxExtents.y) m_maxExtents.y = pt.y;
+    if (pt.z > m_maxExtents.z) m_maxExtents.z = pt.z;
+
+    m_center.x = m_maxExtents.x - m_minExtents.x;
+    m_center.y = m_maxExtents.y - m_minExtents.y;
+    m_center.z = m_maxExtents.z - m_minExtents.z;
+
+}
+
 /*-----------------------------------------------
 
 Name:	GetDirectoryPath
@@ -65,7 +114,6 @@ bool CAssimpModel::LoadModelFromFile(char* sFilePath)
 
     if (!scene)
     {
-        //		MessageBox(appMain.hWnd, "Couldn't load model ", "Error Importing Asset", MB_ICONERROR);
         return false;
     }
 
@@ -73,6 +121,22 @@ bool CAssimpModel::LoadModelFromFile(char* sFilePath)
 
     int iTotalVertices = 0;
 
+    // Determine the extents of the mesh
+    m_meshProperties.resize(scene->mNumMeshes);
+    FOR(i, scene->mNumMeshes)
+    {
+        aiMesh* mesh = scene->mMeshes[i];
+        if (!mesh->HasTextureCoords(0))
+        {
+            continue;
+        }
+        int iMeshVertices = mesh->mNumVertices;
+        FOR(j, iMeshVertices)
+        {
+            m_meshProperties[i].updateExtents(mesh->mVertices[j].x, mesh->mVertices[j].y, mesh->mVertices[j].z);
+        }
+    }
+    // Load in the mesh vertex information
     FOR(i, scene->mNumMeshes)
     {
         aiMesh* mesh = scene->mMeshes[i];
@@ -87,7 +151,6 @@ bool CAssimpModel::LoadModelFromFile(char* sFilePath)
         iMeshStartIndices.push_back(iSizeBefore / iVertexTotalSize);
         FOR(j, iMeshFaces)
         {
-
             const aiFace& face = mesh->mFaces[j];
             FOR(k, 3)
             {
@@ -105,6 +168,7 @@ bool CAssimpModel::LoadModelFromFile(char* sFilePath)
     }
     iNumMaterials = scene->mNumMaterials;
 
+    // Load in the texture information
     vector<int> materialRemap(iNumMaterials);
 
     FOR(i, iNumMaterials)

@@ -1,7 +1,6 @@
 // Header files of frequent usage
 
 #include <ctime>
-#include <windows.h>
 
 #include <algorithm>
 #include <cmath>
@@ -25,3 +24,11 @@ using namespace std;
 #define RSFOR(q,s,e) for(int q=s;q>=e;q--)
 
 #define ESZ(elem) (int)elem.size()
+
+#ifndef UINT
+#define UINT unsigned int
+#endif
+
+#ifndef BYTE
+#define BYTE unsigned char
+#endif
